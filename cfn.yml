@@ -254,7 +254,10 @@ Resources:
       DeploymentId: !Ref RestApiDeployment
       Description: 'cfn deployed Stage vote'
       RestApiId: !Ref RestApi
-      StageName: 'vote'
+      StageName: 'api'
       Variables:
-        Stack: 'vote'
-
+        Stack: 'api'
+Outputs:
+  ApiUrl:
+    Description: URL for API
+    Value: !Join [ "", ['https://', !Ref RestApi, '.execute-api.', !Ref 'AWS::Region','.amazonaws.com/api']]
