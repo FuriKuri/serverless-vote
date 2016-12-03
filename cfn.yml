@@ -122,6 +122,7 @@ Resources:
       AuthorizationType: 'NONE'
       Integration:
         Type: 'AWS_PROXY'
+        IntegrationHttpMethod: 'POST'
         Uri: !Join [ "", ['arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/', !GetAtt [HttpToKinesis, Arn], '/invocations']]
         Credentials: !GetAtt [IAMRole, Arn]
   GetVoteMethod:
@@ -131,13 +132,19 @@ Resources:
       ResourceId: !Ref VoteIdResource
       HttpMethod: 'GET'
       AuthorizationType: 'NONE'
+      MethodResponses:
+        - StatusCode: 200
       Integration:
         Type: 'AWS'
         IntegrationHttpMethod: 'POST'
         Uri: 'arn:aws:apigateway:eu-central-1:dynamodb:action/GetItem'
         Credentials: !GetAtt [IAMRole, Arn]
+        IntegrationResponses:
+          - SelectionPattern: 200
+            StatusCode: 200
+        PassthroughBehavior: WHEN_NO_MATCH
         RequestTemplates:
-          application/json: |
+          application/json: !Sub |
                 {
                     "TableName": "${TableName}",
                     "Key": {
