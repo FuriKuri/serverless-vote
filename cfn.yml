@@ -89,8 +89,8 @@ Resources:
 
             exports.handler = function (event, context) {
               var vote = {
-                voteId: event.pathParameters.id,
-                voteType: JSON.parse(event.body).type
+                id: event.pathParameters.id,
+                type: JSON.parse(event.body).type
               };
               console.log(vote);
 
@@ -98,7 +98,7 @@ Resources:
 
               var recordParams = {
                 Data : record,
-                PartitionKey : vote.voteId,
+                PartitionKey : vote.id,
                 StreamName : endpoint
               };
 
@@ -113,7 +113,7 @@ Resources:
                   console.log('Successfully sent data to Kinesis.');
                   context.done(null, {
                    statusCode: 200,
-                   body: 'Thank you for casting a vote for ' + vote.voteType
+                   body: 'Thank you for casting a vote for ' + vote.type
                   });
                 }
               });
@@ -133,8 +133,49 @@ Resources:
 
             var tableName = '${TableName}';
 
+            function updateDB(votes, context) {
+              Object.getOwnPropertyNames(votes).forEach(function(id) {
+                var vote = votes[id];
+                console.log(vote);
+                dynamodb.updateItem({
+                  'TableName': tableName,
+                  'Key': { 'Id' : { 'S': id }},
+                  'UpdateExpression': 'ADD Good :good, Bad :bad',
+                  'ExpressionAttributeValues': { 
+                    ':good' : { "N" : vote.good.toString() },
+                    ':bad' : { "N" : vote.bad.toString() }
+                  }
+                }, function(err, data) {
+                  if (err) {
+                    console.log(err);
+                    context.fail("Error updating table: ", err)
+                  } else {
+                    console.log("Vote received:", vote);
+                    context.succeed("Successfully processed.");
+                 }
+                });
+              });
+            }
+
             exports.handler = function (event, context) {
-              console.log(event);
+              console.log(JSON.stringify(event, null, '  '));
+
+              var votes = {};
+              var len = event.Records.length;
+              for (var i = 0; i < len; i++) {
+                var vote = JSON.parse(new Buffer(event.Records[i].kinesis.data, 'base64'));
+                if (!votes[vote.id]) {
+                  votes[vote.id] = {
+                    good: 0,
+                    bad: 0
+                  }
+                }
+                votes[vote.id][vote.type]++;
+              }
+
+              console.log(votes);
+
+              updateDB(votes, context);
             }
       Runtime: nodejs4.3
       Timeout: '30'
