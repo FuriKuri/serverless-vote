@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'The AWS stack for the URL Shortener'
+Description: 'The AWS stack for the Voting App'
 Parameters:
   TableName:
     Type: String
@@ -35,6 +35,10 @@ Resources:
           - Effect: Allow
             Principal:
               Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
             Action: 'sts:AssumeRole'
       Path: /
       Policies:
@@ -76,3 +80,91 @@ Resources:
             }
       Runtime: nodejs4.3
       Timeout: '30'
+  KinesisToDynamoDB:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Handler: index.handler
+      Role: !GetAtt [IAMRole, Arn]
+      MemorySize: '128'
+      Code:
+        ZipFile: !Sub |
+            var AWS = require('aws-sdk');
+
+            var endpoint = '${StreamName}';
+            var creds = new AWS.EnvironmentCredentials('AWS');
+
+            exports.handler = function (event, context) {
+              console.log(endpoint);
+            }
+      Runtime: nodejs4.3
+      Timeout: '30'
+  RestApi:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Description: 'Vote API'
+      Name: 'Vote API'
+  VoteIdResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId:
+        Ref: "RestApi"
+      ParentId:
+        Fn::GetAtt:
+          - "RestApi"
+          - "RootResourceId"
+      PathPart: "{id}"
+  PostVoteMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId:
+        Fn::GetAtt:
+          - 'RestApi'
+          - 'VoteIdResource'
+      HttpMethod: 'POST'
+      AuthorizationType: 'NONE'
+      Integration:
+        Type: 'AWS_PROXY'
+        Uri: !Join [ "", ['arn:aws:apigateway:eu-central-1:lambda:path/2015-03-31/functions/', !GetAtt [HttpToKinesis, Arn], '/invocations']]
+  GetVoteMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId:
+        Fn::GetAtt:
+          - 'RestApi'
+          - 'VoteIdResource'
+      HttpMethod: 'GET'
+      AuthorizationType: 'NONE'
+      Integration:
+        Type: 'AWS'
+        IntegrationHttpMethod: 'POST'
+        Uri: 'arn:aws:apigateway:eu-central-1:dynamodb:action/GetItem'
+        RequestTemplates:
+          application/json: |
+                {
+                    "TableName": "${TableName}",
+                    "Key": {
+                        "Id": {
+                            "S": "$input.params('id')"
+                        }
+                    },
+                    "ConsistentRead": false,
+                    "ReturnConsumedCapacity": "TOTAL"
+                }
+          integration.request.header.x-dfl-source-ip: context.identity.sourceIp
+  RestApiDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    DependsOn: ["GetVoteMethod", "PostVoteMethod"]
+    Properties:
+      RestApiId: !Ref RestApi
+  RestApiStage:
+    Type: 'AWS::ApiGateway::Stage'
+    Properties:
+      DeploymentId: !Ref RestApiDeployment
+      Description: 'cfn deployed Stage vote'
+      RestApiId: !Ref RestApi
+      StageName: 'vote'
+      Variables:
+        Stack: 'vote'
+
