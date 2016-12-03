@@ -233,16 +233,16 @@ Resources:
         PassthroughBehavior: WHEN_NO_MATCH
         RequestTemplates:
           application/json: !Sub |
-                {
-                    "TableName": "${TableName}",
-                    "Key": {
-                        "Id": {
-                            "S": "$input.params('id')"
-                        }
-                    },
-                    "ConsistentRead": false,
-                    "ReturnConsumedCapacity": "TOTAL"
-                }
+              {
+                "TableName": "${TableName}",
+                "Key": {
+                  "Id": {
+                    "S": "$input.params('id')"
+                  }
+                },
+                "ConsistentRead": false,
+                "ReturnConsumedCapacity": "TOTAL"
+              }
   RestApiDeployment:
     Type: 'AWS::ApiGateway::Deployment'
     DependsOn: ["GetVoteMethod", "PostVoteMethod"]
