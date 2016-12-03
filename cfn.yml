@@ -85,10 +85,38 @@ Resources:
             var AWS = require('aws-sdk');
 
             var endpoint = '${StreamName}';
-            var creds = new AWS.EnvironmentCredentials('AWS');
+            var kinesis = new AWS.Kinesis({region : 'eu-central-1'});
 
             exports.handler = function (event, context) {
-              console.log(endpoint);
+              var vote = {
+                voteId: event.pathParameters.id,
+                voteType: JSON.parse(event.body).type
+              };
+              console.log(vote);
+
+              var record = JSON.stringify(vote);
+
+              var recordParams = {
+                Data : record,
+                PartitionKey : vote.voteId,
+                StreamName : endpoint
+              };
+
+              kinesis.putRecord(recordParams, function(err, data) {
+                if (err) {
+                  console.log(err);
+                  context.done(null, {
+                   statusCode: 500,
+                   body: 'Error'
+                  });
+                } else {
+                  console.log('Successfully sent data to Kinesis.');
+                  context.done(null, {
+                   statusCode: 200,
+                   body: 'Thank you for casting a vote for ' + vote.voteType
+                  });
+                }
+              });
             }
       Runtime: nodejs4.3
       Timeout: '30'
@@ -101,15 +129,22 @@ Resources:
       Code:
         ZipFile: !Sub |
             var AWS = require('aws-sdk');
+            var dynamodb = new AWS.DynamoDB();
 
-            var endpoint = '${StreamName}';
-            var creds = new AWS.EnvironmentCredentials('AWS');
+            var tableName = '${TableName}';
 
             exports.handler = function (event, context) {
-              console.log(endpoint);
+              console.log(event);
             }
       Runtime: nodejs4.3
       Timeout: '30'
+  KinesisStreamSourceMapping:
+    Type: "AWS::Lambda::EventSourceMapping"
+    Properties:
+      EventSourceArn: !GetAtt [KinesisStream, Arn]
+      FunctionName: !GetAtt [KinesisToDynamoDB, Arn]
+      StartingPosition: "TRIM_HORIZON"
+      BatchSize: '100'
   RestApi:
     Type: 'AWS::ApiGateway::RestApi'
     Properties:
