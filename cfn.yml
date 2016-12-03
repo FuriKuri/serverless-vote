@@ -48,10 +48,22 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                  - 'logs:*'
+                Resource: 'arn:aws:logs:*:*:*'
+              - Effect: Allow
+                Action:
+                  - 'lambda:*'
+                Resource: '*'
+              - Effect: Allow
+                Action:
                   - 'dynamodb:*'
                 Resource:
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TableName}
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TableName}/index/*
+              - Action:
+                  - 'kinesis:*'
+                Effect: Allow
+                Resource: '*'
               - Action:
                   - 'kinesis:*'
                 Effect: Allow
