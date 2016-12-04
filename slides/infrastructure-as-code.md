@@ -8,6 +8,3 @@
 * recover from failures
 *  => cost (reduction), speed (faster execution) and risk (remove errors and security violations)
 * not just for the cloud
-
-
-* Ansible, Chef, Puppet, AWS CloudFormation, Azure Resource Templates, Terraform
