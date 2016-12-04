@@ -1,7 +1,7 @@
 ## Agenda
 * serverless
-  * n-tier driven
-  * message driven
+  * n-tier / message driven
+  * benefits / drawbacks
 * infrastructor as code
 * AWS
   * Lambda
