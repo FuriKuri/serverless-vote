@@ -1,12 +1,12 @@
 ## Agenda
 * serverless
-** n-tier driven
-** message driven
+  * n-tier driven
+  * message driven
 * infrastructor as code
 * AWS
-** Lambda
-** API Gatway
-** DynamoDB
-** Kinesis Streams
-** CloudFormation
-* Demo
+  * Lambda
+  * API Gatway
+  * DynamoDB
+  * Kinesis Streams
+  * CloudFormation
+* demo
