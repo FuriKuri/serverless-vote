@@ -1,15 +1,23 @@
 # serverless-vote
 
 ## Deploy
+```
+$ ./stack
+```
 
 ## Usage
 
+### Get API URL
+```
+API_URL=$(aws cloudformation describe-stacks --stack-name serverless-vote | jq -r '.Stacks[0].Outputs[0].OutputValue')
+```
+
 ### Create vote
 ```
-http POST https://0000000.execute-api.eu-central-1.amazonaws.com/api/my-vote type=good
+$ http POST "$API_URL/my-vote" type=good
 ```
 
 ### Get votes
 ```
-http https://0000000.execute-api.eu-central-1.amazonaws.com/api/my-vote
+$ http "$API_URL/my-vote"
 ```
