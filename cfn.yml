@@ -111,9 +111,10 @@ Resources:
                   });
                 } else {
                   console.log('Successfully sent data to Kinesis.');
+                  var msg = 'Thank you for casting a vote for ' + vote.type;
                   context.done(null, {
-                   statusCode: 200,
-                   body: 'Thank you for casting a vote for ' + vote.type
+                    statusCode: 200,
+                    body: '{ "msg" : "' + msg + '" }'
                   });
                 }
               });
