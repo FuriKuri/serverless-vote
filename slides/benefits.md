@@ -10,6 +10,7 @@
   * Time to market / experimentation
 * Green computing
 
+
 ## Drawbacks
 * Vendor control
 * Vendor lock-in
