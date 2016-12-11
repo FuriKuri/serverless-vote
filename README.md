@@ -21,3 +21,9 @@ $ http POST "$API_URL/my-vote" type=good
 ```
 $ http "$API_URL/my-vote"
 ```
+
+## Presentation
+
+```
+docker run -p 8080:8080 furikuri/serverless-vote
+```
