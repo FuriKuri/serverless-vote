@@ -25,4 +25,4 @@ exports.myHandler = function(event, context, callback) {
 | AWS DynamoDB | AWS Config | AWS Cognito |
 | AWS CloudWatch | AWS Kinesis | AWS SNS |
 | AWS API Gateway | Cron | AWS SES |
-| API |  |  | 
+| API call|  |  | 
